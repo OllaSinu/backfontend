@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+	<link rel="stylesheet" href="./bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" href="./css/base.css">
+	<link rel="stylesheet" href="./css/nprogress.css">
+	<style>
+		.content .item {
+			margin-top: 10px;
+			margin-bottom: 10px;
+		}
+		.content .item img {
+			width: 100%;
+			height: 100%;
+			box-shadow: 0px 0px 10px #ccc;
+
+		}
+		.content .item .title:hover {
+			text-decoration: underline;
+			cursor: pointer;
+		}
+		.content .item div:first-child:hover img {
+			opacity: 0.7;
+			cursor: pointer;
+			transition: all 0.3s ease-in-out;
+		}
+		.content .item .intro {
+			margin-top: 10px;
+			color: #ccc;
+			font-size: 14px;
+		}
+		#loadMore {
+			outline: none;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<nav class="navbar navbar-default" id="nav">
+			
+		</nav>
+
+		<div class="content">
+			<h4>最新文章</h4>
+			<div class="artlist"  id="articleWrap">
+			</div>
+		</div>
+		<button type="button" class="btn  btn-block"  id="loadMore">查看更多</button>
+		<hr>
+
+		<div class="footer" style="text-align:center;font-size: 14px; color: #999;margin:10px 0;">
+			首页 | 主站 | GitHub | created at 2020/02/4 | Powered by 汪玮
+		</div>
+	</div>
+</body>
+<script src="./js/jquery.js"></script>
+<script src="./bootstrap/js/bootstrap.min.js"></script>
+<script src="./js/axios.js"></script>
+<script src="./utils/request.js"></script>
+<script src="./js/nprogress.js"></script>
+<script src="./js/moment.js"></script>
+<script src="./js/layer/layer.js"></script>
+<script src="./js/common.js"></script>
+<script>
+	let _page = 1;
+	let _limit = 3;
+	async function loadArticle(){
+		// loading 层
+		var index = layer.load(1, {
+			shade: [0.1,'#ccc'] //0.1透明度的白色背景
+		});
+		let data = await axios.get(`/article?_page=${_page}&_limit=${_limit}`);
+		console.log(data);
+		// 关闭
+		layer.close(index)
+
+		if(!data.length){
+			// 给提示
+			layer.msg('我已经到底了');
+			return;
+		}
+		let newDivHtml = ``;
+		// console.log(data);
+		data.map(v=>{
+			let {art_id,title,comtent,cat_id,author,publish_date,cover,name} = v
+			if(typeof name === 'object'){
+				name = '未分类'
+			}
+			function formatDate(date,format="YYYY-MM-DD HH:mm:ss"){
+            	return moment(date).format(format)
+			}
+			publish_date = formatDate(publish_date,'YYYY-MM-DD')
+			!cover && (cover = 'http://placehold.it/400x150/ccc/ffffff?text=no image')
+			// console.log(cover)
+			newDivHtml += `<div class='item row'>
+					<div class="col-md-2">
+						<img src="${cover}" alt="">
+					</div>
+					<div class="col-md-10">
+						<div class="date ">作者：${author} ， ${publish_date} ， 分类：${name}</div>
+						<div class="title"><a href="/detail.html?art_id=${art_id}">${title}</a></div>
+					</div>
+					<hr>
+				</div>`;
+		})
+
+	// 要和原文章列表标签进行拼接在赋值
+		let oldDivHtml = $("#articleWrap").html()
+		let divHtml =  oldDivHtml + newDivHtml
+		// 赋值给id=articleWrap
+		$("#articleWrap").html(divHtml)
+		
+		console.log(data)
+		
+		// console.log(data)
+	}
+	loadArticle()
+	
+	// 点击加载更多
+	$("#loadMore").on('click',()=>{
+		_page ++;
+		loadArticle();
+	})
+</script>
+</html>
